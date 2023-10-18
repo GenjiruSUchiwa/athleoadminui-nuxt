@@ -1,8 +1,12 @@
-<script setup>
+<script setup lang="ts">
+import {useAuthStore} from "~/store/auth";
 
 definePageMeta({
   layout: 'auth',
 })
+
+
+const auth = useAuthStore()
 
 useHead({
   title: 'Login | Athleo Admin',
