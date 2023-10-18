@@ -2,7 +2,8 @@ import type { UseFetchOptions } from 'nuxt/app'
 import { defu } from 'defu'
 
 export function useCustomFetch<T> (url: string, options: UseFetchOptions<T> = {}) {
-    const userAuth = useCookie('token')
+    const userAuth = useCookie('auth.user')
+    console.log(userAuth)
     const config = useRuntimeConfig()
 
     const defaults: UseFetchOptions<T> = {
@@ -15,7 +16,7 @@ export function useCustomFetch<T> (url: string, options: UseFetchOptions<T> = {}
 
         // set user token if connected
         headers: userAuth.value
-            ? { Authorization: `Bearer ${userAuth.value}`, 'Content-type': 'application/json' }
+            ? { Authorization: `Bearer ${userAuth.value.token}`, 'Content-type': 'application/json' }
             : {'Content-type': 'application/json'},
 
         onResponse (_ctx) {
