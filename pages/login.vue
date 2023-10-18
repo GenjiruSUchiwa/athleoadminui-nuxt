@@ -5,6 +5,11 @@ import {object, string} from "yup";
 
 definePageMeta({
   layout: 'auth',
+  middleware: 'guest'
+})
+
+useHead({
+  title: 'Log In | Athleo Admin',
 })
 
 
@@ -35,7 +40,9 @@ const onSubmit = handleSubmit(async ({email, password}) => {
     if(authStore.isAuthenticated)
     {
       const { store } = useAuthStorage()
-      store(authStore.token, authStore.userId)
+      store(authStore.token, authStore.identityUser)
+
+      await router.push((route.query as any).next || '/')
     }
 })
 

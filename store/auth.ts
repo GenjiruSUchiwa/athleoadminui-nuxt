@@ -70,6 +70,6 @@ export const useAuthStore = defineStore(
             isLoading: (state: State) => state.loading,
             authError: (state: State) => state.hasError,
             token: (state: State) => state.user?.token,
-            userId: (state: State) => state.user?.id
+            identityUser: (state: State) => state.user
         },
 })

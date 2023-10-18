@@ -1,7 +1,9 @@
 <script setup>
 
+
+
 definePageMeta({
-  layout: 'auth',
+  middleware: 'auth'
 })
 
 useHead({
@@ -10,5 +12,7 @@ useHead({
 </script>
 
 <template>
-
+  <div>
+   Hello !
+  </div>
 </template>
