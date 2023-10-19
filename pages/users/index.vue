@@ -1,38 +1,39 @@
 <script setup lang="ts">
 import {PencilSquareIcon} from "@heroicons/vue/24/outline";
 import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid'
+import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
+import {FlexRender, getCoreRowModel, useVueTable} from "@tanstack/vue-table";
+import people from '@/users.json'
 
-const people = [
+const columns = [
   {
-    name: 'Lindsay Walton',
-    date: '28/08/1998',
-    department: 'Optimization',
-    email: 'lindsay.walton@example.com',
-    approved: true,
-    email_verified: true,
-    image:
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },{
-    name: 'Lindsay Walton',
-    date: '28/08/1998',
-    department: 'Optimization',
-    email: 'lindsay.walton@example.com',
-    approved: false,
-    email_verified: true,
-    image:
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-  },{
-    name: 'Lindsay Walton',
-    date: '28/08/1998',
-    department: 'Optimization',
-    email: 'lindsay.walton@example.com',
-    approved: true,
-    email_verified: false,
-    image:
-        'https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
+    accessorKey:'name',
+    header: 'Name'
   },
-  // More people...
+  {
+    accessorKey:'email',
+    header: 'Email'
+  },
+  {
+    accessorKey:'date',
+    header: 'Date'
+  },
+
+  {
+    accessorKey:'email_verified ',
+    header: 'Verified'
+  },
+  {
+    accessorKey:'approved',
+    header: 'Approved'
+  },
 ]
+
+const table = useVueTable({
+  data: people,
+  columns: columns,
+  getCoreRowModel: getCoreRowModel()
+})
 </script>
 
 <template>
@@ -47,37 +48,47 @@ const people = [
       </div>
     </div>
 
-    <div class="mt-8 flow-root">
+    <div class="mt-10 flow-root">
       <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-        <div class="sm:flex sm:items-center my-2">
-          <div class="mt-4 px-8 sm:mt-0 sm:flex-none">
-            <div class="flex flex-1 items-center justify-center px-2 lg:ml-6 lg:justify-end">
-              <div class="w-full max-w-lg lg:max-w-xs">
-                <label for="search" class="sr-only">Search</label>
-                <div class="relative">
-                  <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                    <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
-                  </div>
-                  <input id="search" name="search" class="block w-full rounded-md border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search" type="search" />
+        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
+          <div class="mb-4">
+            <div class="w-full max-w-lg lg:max-w-xs">
+              <label for="search" class="sr-only">Search</label>
+              <div class="relative">
+                <div class="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                  <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
                 </div>
+                <input id="search" name="search" class="block w-full rounded-md border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search" type="search" />
               </div>
             </div>
           </div>
-        </div>
-        <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
           <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-300">
               <thead class="bg-gray-50">
+
               <tr>
-                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>
-                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>
-                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>
-                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Verified</th>
-                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>
-                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">
-                  <span class="sr-only">Edit</span>
-                </th>
+              <th
+                  v-for="(header, headerIdx) in table.getFlatHeaders()"
+                  :key="header.id"
+                  scope="col"
+                  :class="headerIdx === 0 ? 'py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6': 'px-3 py-3.5 text-left text-sm font-semibold text-gray-900'"
+              >
+                <FlexRender
+                :render="header.column.columnDef.header"
+                :props="header.getContext()"
+                />
+              </th>
               </tr>
+<!--              <tr>-->
+<!--                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>-->
+<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>-->
+<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>-->
+<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Verified</th>-->
+<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>-->
+<!--                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">-->
+<!--                  <span class="sr-only">Edit</span>-->
+<!--                </th>-->
+<!--              </tr>-->
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
               <tr v-for="(person,personIdx) in people" :key="person.email" :class="personIdx % 2 === 0 ? undefined : 'bg-gray-50'">

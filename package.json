@@ -21,6 +21,7 @@
     "@headlessui/vue": "^1.7.16",
     "@heroicons/vue": "^2.0.18",
     "@pinia/nuxt": "^0.5.1",
+    "@tanstack/vue-table": "^8.10.7",
     "@vee-validate/nuxt": "^4.11.8",
     "pinia": "^2.1.7",
     "tailwind-variants": "^0.1.14",
