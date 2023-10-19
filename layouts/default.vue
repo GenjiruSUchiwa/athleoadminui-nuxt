@@ -1,49 +1,43 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import {
-  Dialog,
-  DialogPanel, Disclosure, DisclosureButton, DisclosurePanel,
-  Menu,
-  MenuButton,
-  MenuItem,
-  MenuItems,
-  TransitionChild,
-  TransitionRoot,
-} from '@headlessui/vue'
-import {
-  Bars3Icon,
-  BellIcon,
-  Cog6ToothIcon,
   HomeIcon,
   UsersIcon,
-  XMarkIcon,
 } from '@heroicons/vue/24/outline'
-import { ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
-import { ChevronRightIcon } from '@heroicons/vue/20/solid'
 import DashboardHeader from "~/components/DashboardHeader.vue";
-import {useAuthStore} from "~/store/auth";
 import MobileSideBar from "~/components/MobileSideBar.vue";
 import DesktopSideBar from "~/components/DesktopSideBar.vue";
-const navigation = [
-  { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
+import {NavigationItem, UserNavigation} from "~/types";
+import {useAuthStore} from "~/store/auth";
+
+
+
+
+
+const navigation: NavigationItem[] = [
+  { name: 'Dashboard', href: '/', group:'index', icon: HomeIcon, current: true },
   {
     name: 'Users',
     icon: UsersIcon,
     current: false,
+    group: 'users',
     children: [
-      { name: 'Active', href: '#', count: '12', current: false },
-      { name: 'Inactive', href: '#', count: '5', current: false },
+      { name: 'Active', href: '/users', count: '12', current: false },
+      { name: 'Inactive', href: '/users/inactive', count: '5', current: false },
     ],
   },
 ]
-const userNavigation = [
+const userNavigation:  UserNavigation[] = [
   { name: 'Your profile', href: '#' },
   { name: 'Sign out', href: '#' },
 ]
 
 const authStore = useAuthStore()
-
-const sidebarOpen = ref(false)
+const { currentRoute } = useRouter();
+const path = currentRoute.value
+function setActive(n:any) {
+ console.log("kdjqldjlqsjdjlqsjdlqjdl")
+  alert()
+}
 
 useHead({
   bodyAttrs: {
@@ -57,8 +51,16 @@ useHead({
 
 <template>
   <div>
-    <MobileSideBar/>
-    <DesktopSideBar/>
+    <MobileSideBar :navigation="navigation"
+                   :user-navigation="userNavigation"
+                   :path="path"
+    />
+    <DesktopSideBar
+        @set-active="() => setActive"
+        :navigation="navigation"
+        :user-navigation="userNavigation"
+        :path="path"
+    />
 
     <div class="lg:pl-72">
      <DashboardHeader :user="authStore.identityUser"/>

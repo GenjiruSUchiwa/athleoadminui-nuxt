@@ -1,34 +1,38 @@
 <script setup lang="ts">
 import {
-  Dialog,
-  DialogPanel,
   Disclosure,
   DisclosureButton,
   DisclosurePanel,
-  TransitionChild,
-  TransitionRoot
 } from "@headlessui/vue";
-import {Cog6ToothIcon, HomeIcon, UsersIcon, XMarkIcon} from "@heroicons/vue/24/outline";
-import {ref} from "vue";
+import {Cog6ToothIcon} from "@heroicons/vue/24/outline";
 import {ChevronRightIcon} from "@heroicons/vue/20/solid";
+import {PropType} from "vue";
+import {NavigationItem, UserNavigation} from "~/types";
+import {useSidebarStore} from "~/store/sidebar";
+import {RouteLocationNormalizedLoaded} from "vue-router";
 
 defineComponent({
   name: "DesktopSideBar"
 })
-
-const sidebarOpen = ref(false)
-const navigation = [
-  { name: 'Dashboard', href: '#', icon: HomeIcon, current: true },
-  {
-    name: 'Users',
-    icon: UsersIcon,
-    current: false,
-    children: [
-      { name: 'Active', href: '#', count: '12', current: false },
-      { name: 'Inactive', href: '#', count: '5', current: false },
-    ],
+//const navigation = store.menu
+const props = defineProps({
+  navigation: {
+    type: Array as PropType<NavigationItem[]>,
+    required: true,
   },
-]
+  userNavigation: {
+    type: Object as PropType<UserNavigation[]>,
+    required: true
+  },
+  path: {
+    type: Object as PropType<RouteLocationNormalizedLoaded>,
+    required: true
+  }
+})
+
+const navigation = props.navigation
+const store = useSidebarStore()
+const path = props.path
 </script>
 
 <template>
@@ -44,20 +48,23 @@ const navigation = [
           <li>
             <ul role="list" class="-mx-2 space-y-1">
               <li v-for="item in navigation" :key="item.name">
-                <a v-if="!item.children" :href="item.href" :class="[item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
+                <a v-if="!item.children" :href="item.href" :class="[item.href === path.path ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold']">
                   <component :is="item.icon" class="h-6 w-6 shrink-0 text-gray-400" aria-hidden="true" />
                   {{ item.name }}
                 </a>
-                <Disclosure as="div" v-else v-slot="{ open }">
-                  <DisclosureButton :class="[item.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full']">
+                <Disclosure as="div" v-else v-slot="{ open, close }" :default-open="(true)">
+                  <DisclosureButton :class="[(path.path.includes(item.group)) ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'group flex gap-x-3 rounded-md p-2 text-sm leading-6 font-semibold w-full']">
                     <component :is="item.icon" class="h-6 w-6 shrink-0 text-gray-400" aria-hidden="true" />
                     {{ item.name }}
-                    <ChevronRightIcon :class="[open ? 'rotate-90 text-gray-500' : 'text-gray-400', 'ml-auto h-5 w-5 shrink-0']" aria-hidden="true" />
+                    <ChevronRightIcon :class="[(open) ? 'rotate-90 text-gray-500' : 'text-gray-400', 'ml-auto h-5 w-5 shrink-0']" aria-hidden="true" />
                   </DisclosureButton>
                   <DisclosurePanel as="ul" class="mt-1 px-2">
                     <li v-for="subItem in item.children" :key="subItem.name">
                       <!-- 44px -->
-                      <DisclosureButton as="a" :href="subItem.href" :class="[subItem.current ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'flex rounded-md py-2 pr-2 pl-9 text-sm leading-6']">{{ subItem.name }}
+                      <DisclosureButton @click="$emit('setActive', 'fdfd')"
+                                        as="a" :href="subItem.href"
+                                        :class="[(subItem.href === path.path) ? 'bg-gray-800 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-800', 'flex rounded-md py-2 pr-2 pl-9 text-sm leading-6']">
+                        {{ subItem.name }}
                         <span v-if="subItem.count" class="ml-auto w-9 min-w-max whitespace-nowrap rounded-full bg-gray-900 px-2.5 py-0.5 text-center text-xs font-medium leading-5 text-white ring-1 ring-inset ring-gray-700" aria-hidden="true">{{ subItem.count }}</span>
                       </DisclosureButton>
                     </li>

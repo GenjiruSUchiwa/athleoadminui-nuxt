@@ -11,7 +11,6 @@ export const useStatsStore = defineStore('stats', {
             const { data, pending, error } = await useCustomFetch('/admin/getmetrics', {
                 method: "get"
             })
-            console.log(data)
         }
     }
 })
