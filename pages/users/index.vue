@@ -2,7 +2,7 @@
 import {MagnifyingGlassIcon} from '@heroicons/vue/20/solid'
 import {
   FlexRender,
-  getCoreRowModel,
+  getCoreRowModel, getFilteredRowModel,
   getPaginationRowModel,
   getSortedRowModel,
   SortingState,
@@ -18,6 +18,7 @@ import {EditButton} from "#components";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from '@headlessui/vue'
 import {CheckIcon, ChevronUpDownIcon} from '@heroicons/vue/20/solid'
 import {UserGroupIcon, UserMinusIcon, UserPlusIcon} from "@heroicons/vue/24/outline";
+import {FiltersTableState} from "@tanstack/table-core/src/features/Filters";
 
 export type Person = {
   name: string,
@@ -70,7 +71,8 @@ const columns = [
     header: '',
     cell: ({row}: any) => (h(EditButton, {
       data: row.original.approved,
-    }))
+    })),
+    enableSorting: false
   },
 ]
 const users = ref(makeData(500))
@@ -83,6 +85,9 @@ const table = useVueTable({
     get sorting() {
       return sorting.value
     },
+    get globalFilter() {
+      return filter.value
+    },
   },
   onSortingChange: updaterOrValue => {
     console.log(sorting.value)
@@ -94,6 +99,7 @@ const table = useVueTable({
   getCoreRowModel: getCoreRowModel(),
   getPaginationRowModel: getPaginationRowModel(),
   getSortedRowModel: getSortedRowModel(),
+  getFilteredRowModel: getFilteredRowModel(),
   debugTable: true,
   initialState: {
     pagination: {
@@ -110,6 +116,7 @@ const pageSizes = [
 
 const pageSize = ref(pageSizes[0])
 const sorting = ref<SortingState>([])
+const filter = ref('')
 const currentPage = computed(() => {
   return table.getState().pagination.pageIndex + 1
 })
@@ -161,6 +168,7 @@ watch(pageSize, (value) => {
                   <MagnifyingGlassIcon class="h-5 w-5 text-gray-400" aria-hidden="true"/>
                 </div>
                 <input id="search" name="search"
+                       v-model="filter"
                        class="block w-full rounded-md border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
                        placeholder="Search" type="search"/>
               </div>
