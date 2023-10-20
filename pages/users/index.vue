@@ -8,7 +8,6 @@ import {
   SortingState,
   useVueTable
 } from "@tanstack/vue-table";
-import people from '@/users.json'
 import {h} from 'vue'
 import NameCell from "@/components/NameCell.vue";
 import EmailCell from "@/components/EmailCell.vue";
@@ -17,8 +16,6 @@ import BadgeCell from "@/components/BadgeCell.vue";
 import {EditButton} from "#components";
 import {Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions} from '@headlessui/vue'
 import {CheckIcon, ChevronUpDownIcon} from '@heroicons/vue/20/solid'
-import {UserGroupIcon, UserMinusIcon, UserPlusIcon} from "@heroicons/vue/24/outline";
-import {FiltersTableState} from "@tanstack/table-core/src/features/Filters";
 
 export type Person = {
   name: string,
@@ -229,52 +226,27 @@ watch(pageSize, (value) => {
               </tr>
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
+              <template v-if="table.getRowModel().rows.length > 0">
+                <tr v-for="(row, rowIdx) in table.getRowModel().rows" :key="row.id" :class="rowIdx % 2 === 0 ? undefined : 'bg-gray-50'">
+                  <td v-for="cell in row.getVisibleCells()" :key="cell.id">
+                    <FlexRender
+                        :render="cell.column.columnDef.cell"
+                        :props="cell.getContext()"
+                    />
+                  </td>
+                </tr>
+              </template>
 
-              <tr v-for="(row, rowIdx) in table.getRowModel().rows" :key="row.id" :class="rowIdx % 2 === 0 ? undefined : 'bg-gray-50'">
-                <td v-for="cell in row.getVisibleCells()" :key="cell.id">
-                  <FlexRender
-                      :render="cell.column.columnDef.cell"
-                      :props="cell.getContext()"
-                  />
-                </td>
-              </tr>
-              <!--              <tr v-for="(person,personIdx) in people" :key="person.email" :class="personIdx % 2 === 0 ? undefined : 'bg-gray-50'">-->
-              <!--                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">-->
-              <!--                  <div class="flex items-center">-->
-              <!--                    <div class="h-11 w-11 flex-shrink-0">-->
-              <!--                      <img class="h-11 w-11 rounded-full" :src="person.image" alt="" />-->
-              <!--                    </div>-->
-              <!--                    <div class="ml-4">-->
-              <!--                      <div class="font-medium text-gray-900">{{ person.name??'Unknow' }}</div>-->
-              <!--                    </div>-->
-              <!--                  </div>-->
-              <!--                </td>-->
-              <!--                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.email }}</td>-->
-              <!--                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.date }}</td>-->
-              <!--                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">-->
-              <!--                  <span-->
-              <!--                      :class="[(person.email_verified)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"-->
-              <!--                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "-->
-              <!--                  >-->
-              <!--                    {{ person.email_verified ? 'confirmed':'pending' }}-->
-              <!--                  </span>-->
-              <!--                </td>-->
-              <!--                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">-->
-              <!--                  <span-->
-              <!--                      :class="[(person.approved)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"-->
-              <!--                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "-->
-              <!--                  >-->
-              <!--                    {{ person.approved ? 'confirmed':'pending' }}-->
-              <!--                  </span>-->
-              <!--                </td>-->
-              <!--                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">-->
-              <!--                  <a href="#" class="text-indigo-600 hover:text-indigo-900"-->
-              <!--                  >-->
-              <!--                    <PencilSquareIcon class="w-5 h-5"/>-->
-              <!--                    <span class="sr-only">, {{ person.name }}</span></a-->
-              <!--                  >-->
-              <!--                </td>-->
-              <!--              </tr>-->
+              <template v-else>
+                <tr class="p-4">
+                  <td colspan="6" class="p-4">
+                    <div class="text-center">
+                      <h3 class="mt-2 text-sm font-semibold text-gray-900">No data</h3>
+                      <p class="mt-1 text-sm text-gray-500">We don't have any result for your query.</p>
+                    </div>
+                  </td>
+                </tr>
+              </template>
               </tbody>
             </table>
           </div>
