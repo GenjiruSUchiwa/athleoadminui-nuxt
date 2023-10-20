@@ -18,7 +18,7 @@ const stats = [
     <dl class="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
       <div v-for="item in stats" :key="item.id" class="relative overflow-hidden rounded-lg bg-white px-4 pb-12 pt-5 shadow sm:px-6 sm:pt-6">
         <dt>
-          <div class="absolute rounded-md bg-indigo-500 p-3"
+          <div class="absolute rounded-md p-3"
                :class="['',
                (item.icon === UserGroupIcon ? 'bg-indigo-500 text-blue-800' :''),
                (item.icon === UserPlusIcon ? 'bg-green-500' : ''),
