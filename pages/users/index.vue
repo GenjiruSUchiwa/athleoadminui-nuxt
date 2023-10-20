@@ -1,39 +1,113 @@
 <script setup lang="ts">
-import {PencilSquareIcon} from "@heroicons/vue/24/outline";
-import { ChevronLeftIcon, ChevronRightIcon } from '@heroicons/vue/20/solid'
 import { MagnifyingGlassIcon } from '@heroicons/vue/20/solid'
-import {FlexRender, getCoreRowModel, useVueTable} from "@tanstack/vue-table";
+import {FlexRender, getCoreRowModel, getPaginationRowModel, useVueTable} from "@tanstack/vue-table";
 import people from '@/users.json'
+import {h} from 'vue'
+import NameCell from "@/components/NameCell.vue";
+import EmailCell from "@/components/EmailCell.vue";
+import DateCell from "@/components/DateCell.vue";
+import BadgeCell from "@/components/BadgeCell.vue";
+import {EditButton} from "#components";
+import { Listbox, ListboxButton, ListboxLabel, ListboxOption, ListboxOptions } from '@headlessui/vue'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/vue/20/solid'
+export type Person = {
+  name: string,
+  date: string,
+  email: string,
+  approved: boolean,
+  verified: boolean,
+  image: string
+};
 
 const columns = [
   {
     accessorKey:'name',
-    header: 'Name'
+    header: 'Name',
+    cell: ({row}: any) =>(h(NameCell, {
+      name: row.original.name,
+      image: row.original.image
+    }))
   },
   {
     accessorKey:'email',
-    header: 'Email'
+    header: 'Email',
+    cell: ({row}: any) =>(h(EmailCell, {
+      email: row.original.email,
+    }))
   },
   {
     accessorKey:'date',
-    header: 'Date'
+    header: 'Date',
+    cell: ({row}: any) =>(h(DateCell, {
+      date: row.original.date,
+    }))
   },
-
   {
-    accessorKey:'email_verified ',
-    header: 'Verified'
+    accessorKey:'verified',
+    header: 'Verified',
+    cell: ({row}: any) =>(h(BadgeCell, {
+      data: row.original.verified,
+    }))
   },
   {
     accessorKey:'approved',
-    header: 'Approved'
+    header: 'Approved',
+    cell: ({row}: any) =>(h(BadgeCell, {
+      data: row.original.approved,
+    }))
+  },
+  {
+    accessorKey:'edit',
+    header: '',
+    cell: ({row}: any) =>(h(EditButton, {
+      data: row.original.approved,
+    }))
   },
 ]
 
+const INITIAL_PAGE_INDEX = 0;
+const goToPageNumber = ref(INITIAL_PAGE_INDEX + 1);
 const table = useVueTable({
-  data: people,
+  data: people as Person[],
   columns: columns,
-  getCoreRowModel: getCoreRowModel()
+  getCoreRowModel: getCoreRowModel(),
+  getPaginationRowModel: getPaginationRowModel(),
+  initialState: {
+    pagination: {
+      pageSize: 10
+    }
+  }
 })
+
+const pageSizes = [
+  { id: 10, name: '10' },
+  { id: 15, name: '15' },
+  { id: 20, name: '20' },
+]
+
+const pageSize = ref(pageSizes[0])
+
+const currentPage = computed(() => {
+  return table.getState().pagination.pageIndex + 1
+})
+
+const totalPages = computed(() => {
+  return table.getFilteredRowModel().rows.length
+})
+function handleGoToPage(e) {
+  const page = e.target.value ? Number(e.target.value) - 1 : 0;
+  goToPageNumber.value = page + 1;
+  table.setPageIndex(page);
+}
+
+function handlePageSizeChange(size:Number) {
+  table.setPageSize(Number(size));
+}
+
+watch(pageSize, (value) => {
+  handlePageSizeChange(value.id)
+})
+
 </script>
 
 <template>
@@ -51,7 +125,7 @@ const table = useVueTable({
     <div class="mt-10 flow-root">
       <div class="-mx-4 -my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
         <div class="inline-block min-w-full py-2 align-middle sm:px-6 lg:px-8">
-          <div class="mb-4">
+          <div class="mb-4 flex justify-between items-center">
             <div class="w-full max-w-lg lg:max-w-xs">
               <label for="search" class="sr-only">Search</label>
               <div class="relative">
@@ -61,6 +135,31 @@ const table = useVueTable({
                 <input id="search" name="search" class="block w-full rounded-md border-0 bg-white py-1.5 pl-10 pr-3 text-gray-900 ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder="Search" type="search" />
               </div>
             </div>
+            <Listbox as="div" class="flex items-center gap-5" v-model="pageSize">
+              <ListboxLabel class="block text-sm font-medium leading-6 text-gray-900">Show</ListboxLabel>
+              <div class="relative mt-2">
+                <ListboxButton class="relative w-full flex-1  cursor-default rounded-md bg-white py-1.5 pl-3 pr-12 text-left text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                  <span class="block truncate">{{ pageSize.name }}</span>
+                  <span class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+          <ChevronUpDownIcon class="h-5 w-5 text-gray-400" aria-hidden="true" />
+        </span>
+                </ListboxButton>
+
+                <transition leave-active-class="transition ease-in duration-100" leave-from-class="opacity-100" leave-to-class="opacity-0">
+                  <ListboxOptions class="absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none sm:text-sm">
+                    <ListboxOption as="template" v-for="person in pageSizes" :key="person.id" :value="person" v-slot="{ active, selected }">
+                      <li :class="[active ? 'bg-indigo-600 text-white' : 'text-gray-900', 'relative cursor-default select-none py-2 pl-3 pr-9']">
+                        <span :class="[selected ? 'font-semibold' : 'font-normal', 'block truncate']">{{ person.name }}</span>
+
+                        <span v-if="selected" :class="[active ? 'text-white' : 'text-indigo-600', 'absolute inset-y-0 right-0 flex items-center pr-4']">
+                <CheckIcon class="h-5 w-5" aria-hidden="true" />
+              </span>
+                      </li>
+                    </ListboxOption>
+                  </ListboxOptions>
+                </transition>
+              </div>
+            </Listbox>
           </div>
           <div class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg">
             <table class="min-w-full divide-y divide-gray-300">
@@ -79,103 +178,106 @@ const table = useVueTable({
                 />
               </th>
               </tr>
-<!--              <tr>-->
-<!--                <th scope="col" class="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 sm:pl-6">Name</th>-->
-<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Email</th>-->
-<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Title</th>-->
-<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Verified</th>-->
-<!--                <th scope="col" class="px-3 py-3.5 text-left text-sm font-semibold text-gray-900">Status</th>-->
-<!--                <th scope="col" class="relative py-3.5 pl-3 pr-4 sm:pr-6">-->
-<!--                  <span class="sr-only">Edit</span>-->
-<!--                </th>-->
-<!--              </tr>-->
               </thead>
               <tbody class="divide-y divide-gray-200 bg-white">
-              <tr v-for="(person,personIdx) in people" :key="person.email" :class="personIdx % 2 === 0 ? undefined : 'bg-gray-50'">
-                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">
-                  <div class="flex items-center">
-                    <div class="h-11 w-11 flex-shrink-0">
-                      <img class="h-11 w-11 rounded-full" :src="person.image" alt="" />
-                    </div>
-                    <div class="ml-4">
-                      <div class="font-medium text-gray-900">{{ person.name??'Unknow' }}</div>
-                    </div>
-                  </div>
-                </td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.email }}</td>
-                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.date }}</td>
-                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                  <span
-                      :class="[(person.email_verified)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"
-                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "
-                  >
-                    {{ person.email_verified ? 'confirmed':'pending' }}
-                  </span>
-                </td>
-                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">
-                  <span
-                      :class="[(person.approved)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"
-                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "
-                  >
-                    {{ person.approved ? 'confirmed':'pending' }}
-                  </span>
-                </td>
-                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                  <a href="#" class="text-indigo-600 hover:text-indigo-900"
-                  >
-                    <PencilSquareIcon class="w-5 h-5"/>
-                    <span class="sr-only">, {{ person.name }}</span></a
-                  >
+
+              <tr v-for="row in table.getRowModel().rows" :key="row.id">
+                <td v-for="cell in row.getVisibleCells()" :key="cell.id">
+                  <FlexRender
+                      :render="cell.column.columnDef.cell"
+                      :props="cell.getContext()"
+                  />
                 </td>
               </tr>
+<!--              <tr v-for="(person,personIdx) in people" :key="person.email" :class="personIdx % 2 === 0 ? undefined : 'bg-gray-50'">-->
+<!--                <td class="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 sm:pl-6">-->
+<!--                  <div class="flex items-center">-->
+<!--                    <div class="h-11 w-11 flex-shrink-0">-->
+<!--                      <img class="h-11 w-11 rounded-full" :src="person.image" alt="" />-->
+<!--                    </div>-->
+<!--                    <div class="ml-4">-->
+<!--                      <div class="font-medium text-gray-900">{{ person.name??'Unknow' }}</div>-->
+<!--                    </div>-->
+<!--                  </div>-->
+<!--                </td>-->
+<!--                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.email }}</td>-->
+<!--                <td class="whitespace-nowrap px-3 py-4 text-sm text-gray-500">{{ person.date }}</td>-->
+<!--                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">-->
+<!--                  <span-->
+<!--                      :class="[(person.email_verified)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"-->
+<!--                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "-->
+<!--                  >-->
+<!--                    {{ person.email_verified ? 'confirmed':'pending' }}-->
+<!--                  </span>-->
+<!--                </td>-->
+<!--                <td class="whitespace-nowrap px-3 py-5 text-sm text-gray-500">-->
+<!--                  <span-->
+<!--                      :class="[(person.approved)? 'bg-green-50 text-green-700 ring-green-600/20':'bg-red-50 text-red-700 ring-red-600/20']"-->
+<!--                      class="inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset "-->
+<!--                  >-->
+<!--                    {{ person.approved ? 'confirmed':'pending' }}-->
+<!--                  </span>-->
+<!--                </td>-->
+<!--                <td class="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">-->
+<!--                  <a href="#" class="text-indigo-600 hover:text-indigo-900"-->
+<!--                  >-->
+<!--                    <PencilSquareIcon class="w-5 h-5"/>-->
+<!--                    <span class="sr-only">, {{ person.name }}</span></a-->
+<!--                  >-->
+<!--                </td>-->
+<!--              </tr>-->
               </tbody>
             </table>
-            <div class="flex items-center justify-between border-t border-gray-200 bg-white px-4 py-3 sm:px-6">
-              <div class="flex flex-1 justify-between sm:hidden">
-                <a href="#" class="relative inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Previous</a>
-                <a href="#" class="relative ml-3 inline-flex items-center rounded-md border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Next</a>
-              </div>
-              <div class="hidden sm:flex sm:flex-1 sm:items-center sm:justify-between">
-                <div>
-                  <p class="text-sm text-gray-700">
-                    Showing
-                    {{ ' ' }}
-                    <span class="font-medium">1</span>
-                    {{ ' ' }}
-                    to
-                    {{ ' ' }}
-                    <span class="font-medium">10</span>
-                    {{ ' ' }}
-                    of
-                    {{ ' ' }}
-                    <span class="font-medium">97</span>
-                    {{ ' ' }}
-                    results
-                  </p>
-                </div>
-                <div>
-                  <nav class="isolate inline-flex -space-x-px rounded-md shadow-sm" aria-label="Pagination">
-                    <a href="#" class="relative inline-flex items-center rounded-l-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                      <span class="sr-only">Previous</span>
-                      <ChevronLeftIcon class="h-5 w-5" aria-hidden="true" />
-                    </a>
-                    <!-- Current: "z-10 bg-indigo-600 text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600", Default: "text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:outline-offset-0" -->
-                    <a href="#" aria-current="page" class="relative z-10 inline-flex items-center bg-indigo-600 px-4 py-2 text-sm font-semibold text-white focus:z-20 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">1</a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">2</a>
-                    <a href="#" class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 md:inline-flex">3</a>
-                    <span class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-700 ring-1 ring-inset ring-gray-300 focus:outline-offset-0">...</span>
-                    <a href="#" class="relative hidden items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0 md:inline-flex">8</a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">9</a>
-                    <a href="#" class="relative inline-flex items-center px-4 py-2 text-sm font-semibold text-gray-900 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">10</a>
-                    <a href="#" class="relative inline-flex items-center rounded-r-md px-2 py-2 text-gray-400 ring-1 ring-inset ring-gray-300 hover:bg-gray-50 focus:z-20 focus:outline-offset-0">
-                      <span class="sr-only">Next</span>
-                      <ChevronRightIcon class="h-5 w-5" aria-hidden="true" />
-                    </a>
-                  </nav>
-                </div>
-              </div>
-            </div>
           </div>
+          <nav class="flex items-center justify-between border-t border-gray-200 py-3 mt-5" aria-label="Pagination">
+            <div class="hidden sm:block">
+              <p class="text-sm text-gray-700">
+                Showing
+                {{ ' ' }}
+                <span class="font-medium">
+                  {{ currentPage }}
+                </span>
+                {{ ' ' }}
+                to
+                {{ ' ' }}
+                <span class="font-medium">{{ table.getPageCount() }}</span>
+                {{ ' ' }}
+                of
+                {{ ' ' }}
+                <span class="font-medium">{{ totalPages }}</span>
+                {{ ' ' }}
+                results
+              </p>
+            </div>
+            <div class="flex flex-1 justify-between sm:justify-end">
+              <button
+                  class="relative ml-3 inline-flex items-center
+                  rounded-md bg-white px-3 py-2 text-sm font-semibold
+                  text-gray-900 ring-1 ring-inset ring-gray-300
+                  hover:bg-gray-50 focus-visible:outline-offset-0
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50"
+                  @click="() => table.previousPage()"
+                  :disabled="!table.getCanPreviousPage()"
+              >
+
+                Previous
+              </button>
+              <button
+                  @click="() => table.nextPage()"
+                  :disabled="!table.getCanNextPage()"
+                  class="relative ml-3 inline-flex items-center
+                  rounded-md bg-white px-3 py-2 text-sm font-semibold
+                  text-gray-900 ring-1 ring-inset ring-gray-300
+                  hover:bg-gray-50 focus-visible:outline-offset-0
+                  disabled:cursor-not-allowed
+                  disabled:opacity-50
+                  "
+              >
+                Next
+              </button>
+            </div>
+          </nav>
         </div>
       </div>
     </div>
